@@ -9,7 +9,7 @@ import pylab as pl
 #read the csv file in
 df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Houseprice_2009_100km_London.csv', header=0)
 de = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/income.csv', header = 0)
-
+dc = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/FTSE100DatafromYahoo.csv', header = 0)
 
 def changepricetonum(column):
     data = [] #create an empty list called data for adding the price column data into
@@ -30,10 +30,10 @@ changepricetonum(df['Price'])  #call function hashtag these out if we only need 
 def datetodatetime(column):
     date = []
     for row in column:    #scans each row in Price             
-        date.append(datetime.strptime(row,"%Y-%m-%d %H:%M"))  #appends the data with the datetime from that row
+        date.append(datetime.strptime(row,"%Y-%m-%d %H:%M"))  #appends the data with the datetime from that row use  %Y-%m-%d (%H:%M)
 
-    df['Date']=date   #puts it back as a datetime coluumn
-datetodatetime(df['Trdate'])  #call function
+    df['Date']=date   #puts it back as a datetime coluumn either df['Date'] or dc['Date']
+datetodatetime(df['Trdate'])  #call function with either df['Trdate'] or dc['Date']
    
 #plot graph of time against price
 def plotscatterdate(x,y):
@@ -45,7 +45,7 @@ def plotscatterdate(x,y):
     plt.ylabel('Price in Pounds')
     plt.title('Scatter of Price against Time')
     plt.show()
-plotscatterdate(df['Date'],df['Price'])
+plotscatterdate(df['Date'],df['Price'])   #call function with either (df['Date'],df['Price'] OR (dc['Date'],dc['Close']))
     
 #plots a scatter
 def plot(x,y):
@@ -107,7 +107,7 @@ def plotaverages(data):
         price = []
         for row in dd['Price1']:   #for each row that corresponds with that unique month
             price.append(float(row))  #add it to a list
-        means.append(py.mean(price))  #then add the value to a means list, then iterate
+        means.append(py.median(price))  #then add the value to a means list, then iterate
     x = months1   #plot
     y = means
     x, y= (list(i) for i in zip(*sorted(zip(x,y))))   #to numerically order both arrays in date order, relating the individual values from each array
@@ -116,11 +116,11 @@ def plotaverages(data):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))  #reformat x axis to show date in correct format
     plt.xlabel('Date')
     plt.ylabel('Mean Price in Pounds')
+    plt.title('Monthly Median House Prices')
     p = py.polyfit(pl.date2num(x),y,1)   #fit a straight line with order 1
     plt.plot(pl.date2num(x), p[0]*pl.date2num(x) + p[1], 'r-')  #plot x against the coeffecients ofthe line, p[0]x + p[1] == mx + c
     plt.show()
 plotaverages(df)  #call function
-
 
  
 
