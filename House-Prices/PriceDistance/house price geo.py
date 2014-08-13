@@ -53,37 +53,35 @@ def distance(lat1, long1, lat2, long2):
 
 def finddistances(data):
     latitude=[]
-    for row in data['Latitude']:
-        latitude.append(float(row))
+    for row in data['Latitude']:  
+        latitude.append(float(row))   #for each latitude put it in the latitude list
     longitude = []
-    for row in data['Longitude']:
+    for row in data['Longitude']:  #for each longitude put it in the longitude list
         longitude.append(float(row))
-
     latlong= []
-    for elem in zip(latitude, longitude):
+    for elem in zip(latitude, longitude):   #for each element in latitude and longitude (dependently) add it to a list
         latlong.extend(elem)
 
     distances = []
-    for a,b in zip(latlong,latlong[1:])[::2]:
-        distances.append(distance(a,b,51.53066,-0.1231946))
-    
+    for a,b in zip(latlong,latlong[1:])[::2]:     #for each pairwise latlong element 
+        distances.append(distance(a,b,51.53066,-0.1231946))  #find the distance
     data['Distances']=distances
 finddistances(df)
 
 def findintegerdistancesandmean(data):
     integerdist = []
     for i in data['Distances']:
-        integerdist.append(int(i))
+        integerdist.append(int(i))  #turn the floats into integers so only 0-103km integer values
     data['IntegerDistance']=integerdist
-    uniquedist = list(df.apply(set)[15]) 
-    means = []
-    for i in uniquedist:  #for each date in months to iterate loop below
-        dd = data[data['IntegerDistance'] == i]  #change the dataset to only include thos rows with unique months
+    uniquedist = list(df.apply(set)[15]) #find the unique distances
+    median = []
+    for i in uniquedist:  #for each distance to iterate loop below
+        dd = data[data['IntegerDistance'] == i]  #change the dataset to only include thos rows with unique distances
         price = []
-        for row in dd['Price1']:   #for each row that corresponds with that unique month
+        for row in dd['Price1']:   #for each row that corresponds with that unique distance
             price.append(float(row))  #add it to a list
-        means.append(py.median(price))
-    plt.scatter(uniquedist,means)   #puts the date as a number in .date2num
+        median.append(py.median(price)) #at the median of all those at this km to a list called medians, repeat
+    plt.scatter(uniquedist,median)   
     plt.xlim(0,103)
     plt.ylim(150000,)
     plt.xlabel('Distance in km')
@@ -93,12 +91,13 @@ def findintegerdistancesandmean(data):
 findintegerdistancesandmean(df)
 #plot graph of distance against price
 def plotscatterdate(x,y):
-    plt.scatter(x,y)   #puts the date as a number in .date2num
+    plt.scatter(x,y)   
     plt.xlim(0,102)
     plt.xlabel('Distance in km')
     plt.ylabel('Price in Pounds')
     plt.title('Scatter of Price against Distance')
     plt.show()
-#plotscatterdate(df['Distances'],df['Price1'])  
+plotscatterdate(df['Distances'],df['Price1'])  
+
 
 
