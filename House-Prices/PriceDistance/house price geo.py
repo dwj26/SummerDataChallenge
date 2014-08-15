@@ -146,3 +146,28 @@ def plotscatterdate(x,y):
     plt.show()
 plotscatterdate(df['Number'],df['Price1'])  
 
+#this code can take a long time to run, so an email notification is set up to email when the code is complete
+
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+
+msg = MIMEMultipart()
+msg['From'] = 'd.w.j"live.co.uk'
+msg['To'] = 'dwj26@cam.ac.uk'
+msg['Subject'] = 'Code update'
+message = 'Code has finsihed running at '+ str(datetime.now())
+msg.attach(MIMEText(message))
+
+mailserver = smtplib.SMTP('smtp.live.com',587)
+# identify ourselves to smtp live client
+mailserver.ehlo()
+# secure our email with tls encryption
+mailserver.starttls()
+# re-identify ourselves as an encrypted connection
+mailserver.ehlo()
+mailserver.login('d.w.j@live.co.uk', 'Sharks01')
+
+mailserver.sendmail('d.w.j@live.co.uk','dwj26@cam.ac.uk',msg.as_string())
+
+mailserver.quit()
