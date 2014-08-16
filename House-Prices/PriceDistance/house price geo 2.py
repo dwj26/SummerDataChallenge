@@ -7,11 +7,78 @@ Created on Fri Aug 15 16:58:15 2014
 
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
-import matplotlib.colors
+import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
+from datetime import datetime
+import pylab as pl
+
 
 df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Houseprice_2009_100km_London.csv', header=0)
+
+#function for changing the underscored price values to numbers
+def sortdata(column, replace, new):
+    data = [] #create an empty list called data for adding the price column data into
+
+    for row in column:    #scans each row in Price             
+        data.append(row)                        #appends the row to the data list
+ 
+
+    data = [w.replace(replace,'') for w in data]  #for each vlaue in the list replace the underscore with nothing
+
+    #put the data back into a new column called Price1
+    df[new] = data
+    
+sortdata(df['Price'], '_', 'Price1')
+sortdata(df['Postcode'], ' ', 'Postcode1')  #call function hashtag these out if we only need one part of the code
+
+def sortpostcode(column):
+    postcode = []
+    for i in column:
+        postcode.append(i[0:2])
+    df['AreaCode']= postcode
+sortpostcode(df['Postcode1'])
+                       
+
+#need to convert the date to a datetime instead of a string
+def datetodatetime(column):
+    date = []
+    for row in column:    #scans each row in Price             
+        date.append(datetime.strptime(row,"%Y-%m-%d %H:%M"))  #appends the data with the datetime from that row use  %Y-%m-%d (%H:%M)
+
+    df['Date']=date   #puts it back as a datetime coluumn either df['Date'] or dc['Date']
+datetodatetime(df['Trdate'])  #call function with either df['Trdate'] or dc['Date']
+
+def uniquepostcode(data):
+    uniquelist = list(data.apply(set)[15])
+    for i in uniquelist:  #for each postocde area to iterate loop below
+        dd = data[data['AreaCode'] == i]#change the dataset to only include thos rows with unique postcode areas
+        for j in dd:
+            months = list(dd.apply(set)[7])   #we need a list of all the uniqe months
+            months1 = []
+            for row in months:
+                months1.append(datetime.strptime(row,"%Y-%m"))   #create a list with unique months as datetime values
+            medians = []
+            for a in months:  #for each date in months to iterate loop below
+                de = dd[dd['Month'] == a]  #change the dataset to only include thos rows with unique months
+                price = []
+                for row in de['Price1']:   #for each row that corresponds with that unique month
+                    price.append(float(row))  #add it to a list
+                medians.append(np.median(price))  #then add the value to a means list, then iterate
+        x = months1   #plot
+        y = medians
+        x, y= (list(b) for b in zip(*sorted(zip(x,y))))   #to numerically order both arrays in date order, relating the individual values from each array
+        plt.plot(pl.date2num(x), y)
+        plt.xlim(733400,735400)
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))  #reformat x axis to show date in correct format
+        plt.xlabel('Date')
+        plt.ylabel('Mean Price in Pounds')
+        plt.title('Monthly Median House Prices for area ' + i)
+        p = np.polyfit(pl.date2num(x),y,1)   #fit a straight line with order 1
+        plt.plot(pl.date2num(x), p[0]*pl.date2num(x) + p[1], 'r-')
+        plt.show()  #plot x against the coeffecients ofthe line, p[0]x + p[1] == mx + c
+        
+print uniquepostcode(df)
 # setup Lambert Conformal basemap.
 # set resolution=None to skip processing of boundary datasets.
 m = Basemap(width=500000, height = 500000, projection='lcc',
