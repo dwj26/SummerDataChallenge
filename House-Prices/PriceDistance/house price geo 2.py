@@ -12,10 +12,11 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import pylab as pl
+from matplotlib.mlab import griddata
 
 
 df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Houseprice_2009_100km_London.csv', header=0)
-
+dg = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/NPSL_London100km.csv', header=0)
 #function for changing the underscored price values to numbers
 def sortdata(column, replace, new):
     data = [] #create an empty list called data for adding the price column data into
@@ -51,8 +52,9 @@ datetodatetime(df['Trdate'])  #call function with either df['Trdate'] or dc['Dat
 
 def uniquepostcode(data):
     uniquelist = list(data.apply(set)[15])
+    gradient = []
     for i in uniquelist:  #for each postocde area to iterate loop below
-        dd = data[data['AreaCode'] == i]#change the dataset to only include thos rows with unique postcode areas
+        dd = data[data['AreaCode'] == i]#change the dataset to only include thos rows with a particular unique postcode areas
         for j in dd:
             months = list(dd.apply(set)[7])   #we need a list of all the uniqe months
             months1 = []
@@ -68,17 +70,35 @@ def uniquepostcode(data):
         x = months1   #plot
         y = medians
         x, y= (list(b) for b in zip(*sorted(zip(x,y))))   #to numerically order both arrays in date order, relating the individual values from each array
-        plt.plot(pl.date2num(x), y)
-        plt.xlim(733400,735400)
-        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))  #reformat x axis to show date in correct format
-        plt.xlabel('Date')
-        plt.ylabel('Mean Price in Pounds')
-        plt.title('Monthly Median House Prices for area ' + i)
         p = np.polyfit(pl.date2num(x),y,1)   #fit a straight line with order 1
-        plt.plot(pl.date2num(x), p[0]*pl.date2num(x) + p[1], 'r-')
-        plt.show()  #plot x against the coeffecients ofthe line, p[0]x + p[1] == mx + c
+        #plt.show()  #plot x against the coeffecients ofthe line, p[0]x + p[1] == mx + c, unhasthag to see the plots
+        gradient.append(float(p[0]))
         
-print uniquepostcode(df)
+    lats = []
+    lons = []
+    for a in uniquelist:
+        count = 0
+        for i in dg['Pcd']:
+            if i[0:2] == a:
+                lats.append(float(dg['Latitude'][count]))
+                lons.append(float(dg['Longitude'][count]))
+                break
+            else:
+                count += 1
+    lons = np.array(lons)
+    lats = np.array(lats)
+    gradient = np.array(gradient)
+    lons, lats = np.meshgrid(lons,lats)
+    
+
+    m = Basemap(width=500000, height = 500000, projection='kav7',
+                    resolution=None,lat_1=0,lat_2=10,lat_0=52,lon_0=0.)
+    x, y = m(lons,lats)                
+    m.contourf(x,y,gradient)
+    plt.show()
+uniquepostcode(df)
+
+
 # setup Lambert Conformal basemap.
 # set resolution=None to skip processing of boundary datasets.
 m = Basemap(width=500000, height = 500000, projection='lcc',
