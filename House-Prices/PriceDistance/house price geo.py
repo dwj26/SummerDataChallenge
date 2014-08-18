@@ -166,7 +166,7 @@ mailserver.ehlo()
 mailserver.starttls()
 # re-identify ourselves as an encrypted connection
 mailserver.ehlo()
-mailserver.login('d.w.j@live.co.uk', 'Sharks01')
+mailserver.login('d.w.j@live.co.uk', '**************')
 
 mailserver.sendmail('d.w.j@live.co.uk','dwj26@cam.ac.uk',msg.as_string())
 
