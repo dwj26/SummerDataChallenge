@@ -7,12 +7,12 @@ Created on Fri Aug 15 16:58:15 2014
 
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import scipy.interpolate
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import pylab as pl
-from matplotlib.mlab import griddata
+
 
 
 df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Houseprice_2009_100km_London.csv', header=0)
@@ -50,11 +50,11 @@ def datetodatetime(column):
     df['Date']=date   #puts it back as a datetime coluumn either df['Date'] or dc['Date']
 datetodatetime(df['Trdate'])  #call function with either df['Trdate'] or dc['Date']
 
-def uniquepostcode(data):
-    uniquelist = list(data.apply(set)[15])
+def uniquepostcode(data,maxi):  #function to plot maps that show the gradient of increase in house prices, data = data, maxi = changing the color scale on the map to better represent the lower gradients (otherwise everythings blue)
+    uniquelist = list(data.apply(set)[15])  #make a list of the unique post code areas (first 2 letters of post code)
     gradient = []
     for i in uniquelist:  #for each postocde area to iterate loop below
-        dd = data[data['AreaCode'] == i]#change the dataset to only include thos rows with a particular unique postcode areas
+        dd = data[data['AreaCode'] == i]#change the dataset to only include those rows with a particular unique postcode areas
         for j in dd:
             months = list(dd.apply(set)[7])   #we need a list of all the uniqe months
             months1 = []
@@ -71,34 +71,41 @@ def uniquepostcode(data):
         y = medians
         x, y= (list(b) for b in zip(*sorted(zip(x,y))))   #to numerically order both arrays in date order, relating the individual values from each array
         p = np.polyfit(pl.date2num(x),y,1)   #fit a straight line with order 1
-        #plt.show()  #plot x against the coeffecients ofthe line, p[0]x + p[1] == mx + c, unhasthag to see the plots
-        gradient.append(float(p[0]))
-        
+        #plt.show()  #plot x against the coeffecients ofthe line, p[0]x + p[1] == mx + c, unhasthag to see the plots (there are 69 of them)
+        gradient.append(float(p[0])) #append each gradient to the lsit gradient, then repeat fro next postcode area
+    #prepare data to plot on graph   
     lats = []
     lons = []
-    for a in uniquelist:
-        count = 0
-        for i in dg['Pcd']:
-            if i[0:2] == a:
-                lats.append(float(dg['Latitude'][count]))
+    for a in uniquelist:  #for each post code area 
+        count = 0   
+        for i in dg['Pcd']:  #for each postcode present
+            if i[0:2] == a:  #if the first two letters of that postcode equal the post code area
+                lats.append(float(dg['Latitude'][count]))  #append the list with the lat and lon of that postcode
                 lons.append(float(dg['Longitude'][count]))
-                break
+                break   #then return for the next post code area (a)
             else:
-                count += 1
-    lons = np.array(lons)
-    lats = np.array(lats)
-    gradient = np.array(gradient)
-    lons, lats = np.meshgrid(lons,lats)
+                count += 1  #else increase the count/move down the list
+    x = np.array(lons)
+    y= np.array(lats)
+    z = np.array(gradient)  #all data needs to be a numpy array
     
-
-    m = Basemap(width=500000, height = 500000, projection='kav7',
-                    resolution=None,lat_1=0,lat_2=10,lat_0=52,lon_0=0.)
-    x, y = m(lons,lats)                
-    m.contourf(x,y,gradient)
+    xi,yi = np.linspace(x.min(),x.max(),500), np.linspace(y.min(),y.max(),500)   #code for the interpolation proccess between lats and lons
+    xi,yi = np.meshgrid(xi,yi)   #need to create a grid of xi, yi
+   
+    rbf = scipy.interpolate.Rbf(x,y,z, function = 'linear')  #interpolate action as if a linear increase bewtween points
+    zi = rbf(xi,yi)    
+    m = Basemap(width=500000, height = 500000, projection='lcc',
+            resolution='h',lat_1=0,lat_2=10,lat_0=52,lon_0=0.)   #create a basemap for south east England
+    m.imshow(zi, vmin = z.min(), vmax = maxi, origin = 'lower',extent = [x.min(),x.max(),y.min(),y.max()])  #put the image of the heatmap plot onto the basemap (change the vmax) to change the associated color scale
+    m.scatter(x,y,c=z)
+    m.drawcoastlines()  #draw the coastlines
+    plt.colorbar()  #put the color bar next to the plot
+    plt.title('Map of change in houseprices from 09-14')
     plt.show()
-uniquepostcode(df)
+    
+uniquepostcode(df,280) #call the function
 
-
+#code to plot  map of all house sales around London between 09-14 as a hexplot
 # setup Lambert Conformal basemap.
 # set resolution=None to skip processing of boundary datasets.
 m = Basemap(width=500000, height = 500000, projection='lcc',
