@@ -95,7 +95,7 @@ def uniquepostcode(data,maxi):  #function to plot maps that show the gradient of
     rbf = scipy.interpolate.Rbf(x,y,z, function = 'linear')  #interpolate action as if a linear increase bewtween points
     zi = rbf(xi,yi)    
     m = Basemap(width=500000, height = 500000, projection='lcc',
-            resolution='h',lat_1=0,lat_2=10,lat_0=52,lon_0=0.)   #create a basemap for south east England
+            resolution='h', lat_0=51.507,lon_0=-0.1275)   #create a basemap for south east England
     m.imshow(zi, vmin = z.min(), vmax = maxi, origin = 'lower',extent = [x.min(),x.max(),y.min(),y.max()])  #put the image of the heatmap plot onto the basemap (change the vmax) to change the associated color scale
     m.scatter(x,y,c=z)
     m.drawcoastlines()  #draw the coastlines
