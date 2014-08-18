@@ -91,20 +91,31 @@ def uniquepostcode(data,maxi):  #function to plot maps that show the gradient of
     
     xi,yi = np.linspace(x.min(),x.max(),500), np.linspace(y.min(),y.max(),500)   #code for the interpolation proccess between lats and lons
     xi,yi = np.meshgrid(xi,yi)   #need to create a grid of xi, yi
-   
+    print 'Coordinates of data centre'  #need to find the centre of the data to centre the amp around it
+    print x.min() + ((x.max()-x.min())/2)
+    print y.min() + ((y.max()-y.min())/2)
     rbf = scipy.interpolate.Rbf(x,y,z, function = 'linear')  #interpolate action as if a linear increase bewtween points
     zi = rbf(xi,yi)    
-    m = Basemap(width=500000, height = 500000, projection='lcc',
-            resolution='h', lat_0=51.507,lon_0=-0.1275)   #create a basemap for south east England
+    m = Basemap(llcrnrlon=x.min(),llcrnrlat=y.min(),urcrnrlon=x.max(), urcrnrlat=y.max(), projection='lcc',resolution='h', lat_0=51.58195,lon_0=-0.236653)   #create a basemap for south east England centred on the centre of the plot, and the corners match with the corners of the underlying image of the plot
+    lon = [-0.1257400, 0.11667, -1.25596,-0.97113,0.51667]  #plot city points to make map more readable
+    lat = [51.5085, 52.2, 51.75222,51.45625,51.26667]   #city coordinates
+    a,b = m(lon, lat)  #put into map axes coordinates
+    m.plot(a, b, 'b.', markersize=1)  #plot point markers
+    labels = ['London', 'Cambridge', 'Oxford','Reading','Maidstone']  #loop for plotting labels
+    for label, xpt, ypt in zip(labels, a, b):
+        plt.text(xpt, ypt, label)
     m.imshow(zi, vmin = z.min(), vmax = maxi, origin = 'lower',extent = [x.min(),x.max(),y.min(),y.max()])  #put the image of the heatmap plot onto the basemap (change the vmax) to change the associated color scale
     m.scatter(x,y,c=z)
-    m.drawcoastlines()  #draw the coastlines
+    m.drawcoastlines()
+    m.drawcounties()
     plt.colorbar()  #put the color bar next to the plot
     plt.title('Map of change in houseprices from 09-14')
     plt.show()
-    
 uniquepostcode(df,280) #call the function
-
+uniquepostcode(df,120)
+uniquepostcode(df,80)
+uniquepostcode(df,40)
+uniquepostcode(df,20)
 #code to plot  map of all house sales around London between 09-14 as a hexplot
 # setup Lambert Conformal basemap.
 # set resolution=None to skip processing of boundary datasets.
