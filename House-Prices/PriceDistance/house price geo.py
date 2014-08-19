@@ -56,39 +56,39 @@ def finddistances(data):  #function to find distances to London (KGX)
     for row in data['Longitude']:  #for each longitude put it in the longitude list
         longitude.append(float(row))
     latlong= []
-    for elem in zip(latitude, longitude):   #for each element in latitude and longitude (dependently) add it to a list
+    for elem in zip(latitude, longitude):   #for each element in latitude and longitude (dependently) add it to a list i.e. the new list is [lat,lon,lat2,lon2,lat3,lon3...]
         latlong.extend(elem)
 
     distances = []
-    for a,b in zip(latlong,latlong[1:])[::2]:     #for each pairwise latlong element 
-        distances.append(distance(a,b,51.53066,-0.1231946))  #find the distance
+    for a,b in zip(latlong,latlong[1:])[::2]:     #for each pairwise latlong element from the list latlong 
+        distances.append(distance(a,b,51.53066,-0.1231946))  #find the distance and then append it to the list distances
     data['Distances']=distances
-finddistances(df)
+finddistances(df) #call the function with a particular data set
 
-#this is a ridiculously long function, I was thinking of making it more efficient with Cython eventually, 1hour run time
+#this is a very long function, I was thinking of making it more efficient with Cython eventually, 1hour run time due to the two for loops and the zip functions within them
 def numberwithinradius(data, data1):#function to find the number of train stations within a certain radius
     latitude=[]
     for row in data['Latitude']:  
-        latitude.append(float(row))   #for each latitude put it in the latitude list
+        latitude.append(float(row))   #for each latitude put it in the latitude list of the houses data
     longitude = []
-    for row in data['Longitude']:  #for each longitude put it in the longitude list
+    for row in data['Longitude']:  #for each longitude put it in the longitude list of the houses data
         longitude.append(float(row))
     latlong= []
     for elem in zip(latitude, longitude):   #for each element in latitude and longitude (dependently) add it to a list
         latlong.extend(elem)
     latitude1 = []
-    for row in data1['Latitude']:
-        latitude1.append(float(row))
+    for row in data1['Latitude']:   #for each latitude in the the train data
+        latitude1.append(float(row))  #append the latitude1 list
     longitude1=[]
-    for row in data1['Longitude']:
-        longitude1.append(float(row))
+    for row in data1['Longitude']:  #for each longitude in the train data
+        longitude1.append(float(row))  #append the longitude1 list
     latlong1 = []
     for elem in zip(latitude1, longitude1):   #for each element in latitude and longitude (dependently) add it to a list
         latlong1.extend(elem)
     number = []
     start = datetime.now()
-    for e,f in zip(latlong,latlong[1:])[::2]:  #for each latitude and longitude in the housing list
-        count = 0
+    for e,f in zip(latlong,latlong[1:])[::2]:  #for each latitude and longitude in the housing list of latlong
+        count = 0  #start a count at 0
         for c,d in zip(latlong1,latlong1[1:])[::2]:  #and for each latitude and longitude in the railway list
             radius = 6371 # radius of the earth in km, roughly https://en.wikipedia.org/wiki/Earth_radius
 
@@ -102,39 +102,40 @@ def numberwithinradius(data, data1):#function to find the number of train statio
             dlon = long2-long1
 
             a = pow(sin(dlat/2),2) + cos(lat1)*cos(lat2)*pow(sin(dlon/2),2)
-            distance = 2 * radius * asin(sqrt(a))
+            distance = 2 * radius * asin(sqrt(a))  #calculate the distance
 
-            if distance <= 1:  #calculate the distance
-                count +=1    #add one to the coun if distance less than a km, then go back and loop for each railway
-        number.append(count)  #append the count of the number of railways to the number list and loop for each house
+            if distance <= 1:
+                count +=1    #add one to the count if distance less than a km, then go back and loop for the next railway
+        number.append(count)  #append the count of the number of railways to the number list and then go back to loop for the next house
+    #the number list now gives you the number of railways with a distance of 1km from each house in the list of house sales
     end = datetime.now()
-    print end - start    #code to time the operation, theis takes about 1hour 10 minutes! More efficient with Cython
+    print end - start    #code to time the operation, theis takes about 1hour 10 minutes! More efficient with Cython, just gives an idea of the time with end- start
     data['Number'] = number  #put this into the date column
 numberwithinradius(df, ds)  #call the function
 
 
 
-def findintegerdistancesandmean(data):   #a function to plot median prices of houses at certain integer distances (0-103km) from London
-    integerdist = []
-    for i in data['Distances']:
-        integerdist.append(int(i))  #turn the floats into integers so only 0-103km integer values
-    data['IntegerDistance']=integerdist
-    uniquedist = list(df.apply(set)[15]) #find the unique distances
+def findgraphforrailways(one):   #a function to plot median prices of houses at certain integer distances (0-103km) from London
+    integer = []  #create a new list designed to put the integer number of railways within 1km into
+    for i in one:
+        integer.append(int(i))  #turn the floats into integers so only integer values
+    df['Railways']=integer  #create a new railway column with the integer number of railways within 1km for each house
+    uniquedist = list(df.apply(set)[15]) #find the unique number of railways
     median = []
-    for i in uniquedist:  #for each distance to iterate loop below
-        dd = data[data['IntegerDistance'] == i]  #change the dataset to only include thos rows with unique distances
+    for i in uniquedist:  #for each unique number of railways within 1km to iterate loop below
+        dd = df[df['Railways'] == i]  #change the dataset to only include those rows with unique number of railways
         price = []
         for row in dd['Price1']:   #for each row that corresponds with that unique distance
             price.append(float(row))  #add it to a list
-        median.append(np.median(price)) #at the median of all those at this km to a list called medians, repeat
-    plt.scatter(uniquedist,median)   
-    plt.xlim(0,103)
-    plt.ylim(150000,)
-    plt.xlabel('Distance in km')
+        median.append(np.median(price)) #at the median of all those with this number of railways to a list called medians, repeat for next number of railways value
+    plt.scatter(uniquedist,median)   #plot a scatter
+    plt.xlim(0,)
+    plt.ylim(0,)
+    plt.xlabel('Number of Metro/Railway Stations')
     plt.ylabel('Price in Pounds')
-    plt.title('Scatter of Price against Distance')
+    plt.title('Scatter of Price against Number of Rly Stns')
     plt.show()
-findintegerdistancesandmean(df)
+findgraphforrailways(df['Number'])  #call function with either df['Distance'] or df[']
     
 #plot graph of distance against price
 def plotscatterdate(x,y):
@@ -145,29 +146,32 @@ def plotscatterdate(x,y):
     plt.title('Scatter of Price against Number of Railways')
     plt.show()
 plotscatterdate(df['Number'],df['Price1'])  
-
+    
 #this code can take a long time to run, so an email notification is set up to email when the code is complete
+#function to send email from a live account, change mailserver if not a live account
+def email(emailfrom,emailto, password):
+    import smtplib
+    from email.MIMEMultipart import MIMEMultipart
+    from email.MIMEText import MIMEText
 
-import smtplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
+    msg = MIMEMultipart()
+    msg['From'] = emailfrom
+    msg['To'] = emailto
+    msg['Subject'] = 'Code update'
+    message = 'Code has finsihed running at '+ str(datetime.now())
+    msg.attach(MIMEText(message))
 
-msg = MIMEMultipart()
-msg['From'] = 'd.w.j"live.co.uk'
-msg['To'] = 'dwj26@cam.ac.uk'
-msg['Subject'] = 'Code update'
-message = 'Code has finsihed running at '+ str(datetime.now())
-msg.attach(MIMEText(message))
+    mailserver = smtplib.SMTP('smtp.live.com',587)
+    # identify ourselves to smtp live client
+    mailserver.ehlo()
+    # secure our email with tls encryption
+    mailserver.starttls()
+    # re-identify ourselves as an encrypted connection
+    mailserver.ehlo()
+    mailserver.login(emailfrom, password)
 
-mailserver = smtplib.SMTP('smtp.live.com',587)
-# identify ourselves to smtp live client
-mailserver.ehlo()
-# secure our email with tls encryption
-mailserver.starttls()
-# re-identify ourselves as an encrypted connection
-mailserver.ehlo()
-mailserver.login('d.w.j@live.co.uk', '**************')
+    mailserver.sendmail(emailfrom,emailto,msg.as_string())
 
-mailserver.sendmail('d.w.j@live.co.uk','dwj26@cam.ac.uk',msg.as_string())
+    mailserver.quit()
 
-mailserver.quit()
+email('d.w.j@live.co.uk','dwj26@cam.ac.uk','*****')  #call function
