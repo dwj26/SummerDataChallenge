@@ -22,23 +22,23 @@ def sortdata(column, replace, new):
     data = [] #create an empty list called data for adding the price column data into
 
     for row in column:    #scans each row in Price             
-        data.append(row)                        #appends the row to the data list
+        data.append(row)  #appends the row to the data list
  
 
-    data = [w.replace(replace,'') for w in data]  #for each vlaue in the list replace the underscore with nothing
+    data = [w.replace(replace,'') for w in data]  #for each value in the list replace the underscore with nothing
 
-    #put the data back into a new column called Price1
-    df[new] = data
+    #put the data back into a new column called whatever is called as 'new' in the function
+    df[new] = data  
     
 sortdata(df['Price'], '_', 'Price1')
-sortdata(df['Postcode'], ' ', 'Postcode1')  #call function hashtag these out if we only need one part of the code
+sortdata(df['Postcode'], ' ', 'Postcode1')  #call function, hashtag these out if we only need one part of the code
 
 def sortpostcode(column):
-    postcode = []
-    for i in column:
-        postcode.append(i[0:2])
-    df['AreaCode']= postcode
-sortpostcode(df['Postcode1'])
+    postcode = []  #create postcode list
+    for i in column:  #for an element in the postocde column
+        postcode.append(i[0:2])  #append the first two letters of that area
+    df['AreaCode']= postcode  #put into new column call area code, area code now means the first two letters of the postcode
+sortpostcode(df['Postcode1']) #call the function
                        
 
 #need to convert the date to a datetime instead of a string
@@ -52,27 +52,27 @@ datetodatetime(df['Trdate'])  #call function with either df['Trdate'] or dc['Dat
 
 def uniquepostcode(data,maxi):  #function to plot maps that show the gradient of increase in house prices, data = data, maxi = changing the color scale on the map to better represent the lower gradients (otherwise everythings blue)
     uniquelist = list(data.apply(set)[15])  #make a list of the unique post code areas (first 2 letters of post code)
-    gradient = []
+    gradient = []  #make a list of the gradient of house price change
     for i in uniquelist:  #for each postocde area to iterate loop below
-        dd = data[data['AreaCode'] == i]#change the dataset to only include those rows with a particular unique postcode areas
-        for j in dd:
+        dd = data[data['AreaCode'] == i]  #change the dataset to only include those rows with a particular unique postcode areas
+        for j in dd:  #for the row in the new data set which only includes a single area code
             months = list(dd.apply(set)[7])   #we need a list of all the uniqe months
             months1 = []
             for row in months:
                 months1.append(datetime.strptime(row,"%Y-%m"))   #create a list with unique months as datetime values
             medians = []
             for a in months:  #for each date in months to iterate loop below
-                de = dd[dd['Month'] == a]  #change the dataset to only include thos rows with unique months
+                de = dd[dd['Month'] == a]  #change the dataset to only include those rows with unique months
                 price = []
                 for row in de['Price1']:   #for each row that corresponds with that unique month
                     price.append(float(row))  #add it to a list
-                medians.append(np.median(price))  #then add the value to a means list, then iterate
+                medians.append(np.median(price))  #then add the value to a median list, then repeat for next month
         x = months1   #plot
         y = medians
         x, y= (list(b) for b in zip(*sorted(zip(x,y))))   #to numerically order both arrays in date order, relating the individual values from each array
         p = np.polyfit(pl.date2num(x),y,1)   #fit a straight line with order 1
         #plt.show()  #plot x against the coeffecients ofthe line, p[0]x + p[1] == mx + c, unhasthag to see the plots (there are 69 of them)
-        gradient.append(float(p[0])) #append each gradient to the lsit gradient, then repeat fro next postcode area
+        gradient.append(float(p[0])) #append each gradient to the lsit gradient, then repeat for next postcode area
     #prepare data to plot on graph   
     lats = []
     lons = []
@@ -111,7 +111,7 @@ def uniquepostcode(data,maxi):  #function to plot maps that show the gradient of
     plt.colorbar()  #put the color bar next to the plot
     plt.title('Map of change in houseprices from 09-14')
     plt.show()
-uniquepostcode(df,280) #call the function
+uniquepostcode(df,280) #call the function for maximum gradient values that make insightful plots
 uniquepostcode(df,120)
 uniquepostcode(df,80)
 uniquepostcode(df,40)
