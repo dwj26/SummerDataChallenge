@@ -10,7 +10,7 @@ import csv
 from datetime import datetime
 import pylab as pl
 
-df = pd.read_csv('C:/Users/Dan/Downloads/trainprice.csv', header = 0)
+df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', header = 0)
 
 def sortdata(column, replace, new):
     data = [] #create an empty list called data for adding the price column data into
@@ -69,6 +69,7 @@ def sortpostcode(column):
             else:
                 count += 1  #else increment the count, this allows each areacode (2 letters) to have a number
     df['AreaCodeNum']=areacodenum  #put the areacode data back into the the dataset as a number
+    return uniquelist
 sortpostcode(df['Postcode1']) #call the function
 
 
@@ -81,9 +82,10 @@ train_data = df.values
 
 ##REPEAT WHOLE PROCESS WITH TEST DATA MINUS THE PRICE
 
-de = pd.read_csv('C:/Users/Dan/Downloads/price.csv', header = 0)
-
-def sortdata(column, replace, new):
+de = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/price.csv', header = 0)
+dg = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', header = 0)
+   
+def sortdata(column, replace, new,datum):
     data = [] #create an empty list called data for adding the price column data into
 
     for row in column:    #scans each row in Price             
@@ -93,9 +95,10 @@ def sortdata(column, replace, new):
     data = [w.replace(replace,'') for w in data]  #for each value in the list replace the underscore with nothing
 
     #put the data back into a new column called whatever is called as 'new' in the function
-    de[new] = data  
+    datum[new] = data  
     
-sortdata(de['Postcode'], ' ', 'Postcode1')  #call function, hashtag these out if we only need one part of the code
+sortdata(de['Postcode'], ' ', 'Postcode1',de)  #call function, hashtag these out if we only need one part of the code
+sortdata(dg['Postcode'], ' ', 'Postcode1',dg)
 #change data to numbers as a predictor will only work with numbers
 de['Lat'] = de['Latitude']
 de['Lon']=de['Longitude']
@@ -120,9 +123,13 @@ def sortpostcode(column):
     postcode = []  #create postcode list
     for i in column:  #for an element in the postocde column
         postcode.append(i[0:2])#append the first two letters of that area
-    de['AreaCode']= postcode  #put into new column call area code, area code now means the first two letters of the postcode
-    uniquelist = list(de.apply(set)[12])  #make a list of the unique post code areas (first 2 letters of post code)
-    areacodenum = []  #create an empty list for the number associated with the area code to placed in (to make it predictor friendly)
+    dg['AreaCode']= postcode  #put into new column call area code, area code now means the first two letters of the postcode
+    uniquelist = list(dg.apply(set)[14])  #make a list of the unique post code areas (first 2 letters of post code)
+    postcode = []  #create postcode list
+    for i in de['Postcode1']:  #for an element in the postocde column
+        postcode.append(i[0:2])#append the first two letters of that area
+    de['AreaCode']= postcode 
+    areacodenum = []#put into new column call area code, area code now means the first two letters of the postcode
     for i in de['AreaCode']:  #for each element in the AreaCode (2 letter) list
         count = 0  #start the count at 0
         for j in uniquelist:  #then search for the elements in the uniquelist (69 total)
@@ -131,7 +138,7 @@ def sortpostcode(column):
             else:
                 count += 1  #else increment the count, this allows each areacode (2 letters) to have a number
     de['AreaCodeNum']=areacodenum  #put the areacode data back into the the dataset as a number
-sortpostcode(de['Postcode1']) #call the function
+sortpostcode(dg['Postcode1']) #call the function
 
 de = de.drop(['AreaCode','Postcode1','Newbuild','Property_Type','Postcode', 'Trdate','Freeorlease'], axis = 1)  #delete any of the data in the dataset that is not a number
 
@@ -150,8 +157,7 @@ forest = RandomForestClassifier(n_estimators = 100)
 
 # Fit the training data to the Survived labels and create the decision trees
 forest = forest.fit(train_data[0::,1::],train_data[0::,0])  #6 or 1? Reduce data set to train data set and try both
-"""#need to learn more about how this works(then change the numbers in train data so we are mapping price correctly)"""
-"""Learn more about Random Forest, book, or internet"""
+
 
 # Take the same decision trees and run it on the test data
 output = forest.predict(test_data)
@@ -165,7 +171,7 @@ output = ['Price']+output
 survived = output
 
 # open a file for writing.
-csv_out = open('C:/Users/Dan/Downloads/dan1.csv', 'wb')
+csv_out = open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/results.csv', 'wb')
 
 # create the csv writer object.
 mywriter = csv.writer(csv_out)
