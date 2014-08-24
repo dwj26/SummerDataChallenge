@@ -10,6 +10,8 @@ import csv
 from datetime import datetime
 import pylab as pl
 
+
+#the first process is with the training data, trainprice, this has the price visible
 df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', header = 0)
 
 def sortdata(column, replace, new):
@@ -80,7 +82,7 @@ df = df.drop(['AreaCode','Postcode1','Newbuild','Property_Type','Postcode', 'Trd
 
 train_data = df.values
 
-##REPEAT WHOLE PROCESS WITH TEST DATA MINUS THE PRICE
+##REPEAT the process with the test data, this is the data without the price. In this case, just one house where a price is needed.
 
 de = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/price.csv', header = 0)
 dg = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', header = 0)
@@ -146,17 +148,17 @@ de = de.drop(['AreaCode','Postcode1','Newbuild','Property_Type','Postcode', 'Trd
 
 test_data = de.values
 
-##NOW CONTINUE
+##NOW CONTINUE, this is the prediction phase
 
 # Import the random forest package
 from sklearn.ensemble import RandomForestClassifier 
 
 # Create the random forest object which will include all the parameters
 # for the fit
-forest = RandomForestClassifier(n_estimators = 100)
+forest = RandomForestClassifier(n_estimators = 1000)
 
 # Fit the training data to the Survived labels and create the decision trees
-forest = forest.fit(train_data[0::,1::],train_data[0::,0])  #6 or 1? Reduce data set to train data set and try both
+forest = forest.fit(train_data[0::,1::],train_data[0::,0])
 
 
 # Take the same decision trees and run it on the test data
@@ -183,4 +185,3 @@ for row in zip(survived):
 # always make sure that you close the file.
 # otherwise you might find that it is empty.
 csv_out.close()
-
