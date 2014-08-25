@@ -9,8 +9,19 @@ import pandas as pd
 import csv
 from datetime import datetime
 import pylab as pl
+import random
 
+#These first lines make a file with a number of random lines from the house file, change and see change in accuracy
+with open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Houseprice_2009_100km_London.csv', "rb") as source:
+    lines = [line for line in source]
+    lines = lines[1:]
+line1 = ['Price,Trdate,Postcode,Property_Type,Newbuild,Freeorlease,Year,Month,Oseast1M,Osnrth1M,Oa11,Latitude,Longitude\r\n']
+random_choice = line1 + random.sample(lines, 5000)  #change this number to see max we can take
 
+with open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', "wb") as sink:
+    sink.write("\n".join(random_choice))
+    sink.close()
+    
 #the first process is with the training data, trainprice, this has the price visible
 df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', header = 0)
 
@@ -185,3 +196,4 @@ for row in zip(survived):
 # always make sure that you close the file.
 # otherwise you might find that it is empty.
 csv_out.close()
+
