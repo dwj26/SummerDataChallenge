@@ -15,8 +15,9 @@ import random
 with open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Houseprice_2009_100km_London.csv', "rb") as source:
     lines = [line for line in source]
     lines = lines[1:]
+    source.close()
 line1 = ['Price,Trdate,Postcode,Property_Type,Newbuild,Freeorlease,Year,Month,Oseast1M,Osnrth1M,Oa11,Latitude,Longitude\r\n']
-random_choice = line1 + random.sample(lines, 5000)  #change this number to see max we can take
+random_choice = line1 + random.sample(lines, 3000)  #3000 seems around the topend I can take with my computer memory, increase higher to check, but may kill python
 
 with open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', "wb") as sink:
     sink.write("\n".join(random_choice))
@@ -24,15 +25,16 @@ with open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-hous
     
 #the first process is with the training data, trainprice, this has the price visible
 df = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', header = 0)
+df = df.dropna()
 
-def sortdata(column, replace, new):
+def sortdata(column, word, new):
     data = [] #create an empty list called data for adding the price column data into
 
     for row in column:    #scans each row in Price             
-        data.append(row)  #appends the row to the data list
+        data.append(str(row))  #appends the row to the data list
  
 
-    data = [w.replace(replace,'') for w in data]  #for each value in the list replace the underscore with nothing
+    data = [w.replace(word,'') for w in data]  #for each value in the list replace the underscore with nothing
 
     #put the data back into a new column called whatever is called as 'new' in the function
     df[new] = data  
@@ -82,7 +84,6 @@ def sortpostcode(column):
             else:
                 count += 1  #else increment the count, this allows each areacode (2 letters) to have a number
     df['AreaCodeNum']=areacodenum  #put the areacode data back into the the dataset as a number
-    return uniquelist
 sortpostcode(df['Postcode1']) #call the function
 
 
@@ -96,8 +97,8 @@ train_data = df.values
 ##REPEAT the process with the test data, this is the data without the price. In this case, just one house where a price is needed.
 
 de = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/price.csv', header = 0)
-dg = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', header = 0)
-   
+dg = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Houseprice_2009_100km_London.csv', header = 0)
+dg = dg.dropna()
 def sortdata(column, replace, new,datum):
     data = [] #create an empty list called data for adding the price column data into
 
@@ -133,17 +134,15 @@ datetodatetime(de['Trdate']) #call function
 
 
 def sortpostcode(column):
-    postcode = []  #create postcode list
-    for i in column:  #for an element in the postocde column
-        postcode.append(i[0:2])#append the first two letters of that area
-    dg['AreaCode']= postcode  #put into new column call area code, area code now means the first two letters of the postcode
-    uniquelist = list(dg.apply(set)[14])  #make a list of the unique post code areas (first 2 letters of post code)
-    postcode = []  #create postcode list
-    for i in de['Postcode1']:  #for an element in the postocde column
-        postcode.append(i[0:2])#append the first two letters of that area
-    de['AreaCode']= postcode 
+    postcode1 = []  #create postcode list
+    for i in dg[column]:  #for an element in the postocde column
+        postcode1.append(i[0:2])#append the first two letters of that area  #put into new column call area code, area code now means the first two letters of the postcode
+    uniquelist  = list(set(postcode1))   #make a list of the unique post code areas (first 2 letters of post code)
+    postcode2 = []  #create postcode list
+    for i in de[column]:  #for an element in the postocde column
+        postcode2.append(i[0:2])#append the first two letters of that area 
     areacodenum = []#put into new column call area code, area code now means the first two letters of the postcode
-    for i in de['AreaCode']:  #for each element in the AreaCode (2 letter) list
+    for i in postcode2:  #for each element in the AreaCode (2 letter) list
         count = 0  #start the count at 0
         for j in uniquelist:  #then search for the elements in the uniquelist (69 total)
             if i ==j:  #if the AreaCode equals that found in the unique list of areacodes
@@ -151,9 +150,9 @@ def sortpostcode(column):
             else:
                 count += 1  #else increment the count, this allows each areacode (2 letters) to have a number
     de['AreaCodeNum']=areacodenum  #put the areacode data back into the the dataset as a number
-sortpostcode(dg['Postcode1']) #call the function
+sortpostcode('Postcode1') #call the function
 
-de = de.drop(['AreaCode','Postcode1','Newbuild','Property_Type','Postcode', 'Trdate','Freeorlease'], axis = 1)  #delete any of the data in the dataset that is not a number
+de = de.drop(['Postcode1','Newbuild','Property_Type','Postcode', 'Trdate','Freeorlease'], axis = 1)  #delete any of the data in the dataset that is not a number
 
 #create a numpy array
 
@@ -166,7 +165,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 # Create the random forest object which will include all the parameters
 # for the fit
-forest = RandomForestClassifier(n_estimators = 1000)
+forest = RandomForestClassifier(n_estimators = 100)
 
 # Fit the training data to the Survived labels and create the decision trees
 forest = forest.fit(train_data[0::,1::],train_data[0::,0])
@@ -181,7 +180,7 @@ output = output.tolist()
 output = ['Price']+output
 
 ##TURN BACK INTO CSV FILE 
-survived = output
+
 
 # open a file for writing.
 csv_out = open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/results.csv', 'wb')
@@ -190,10 +189,9 @@ csv_out = open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014
 mywriter = csv.writer(csv_out)
 
 # writerow - one row of data at a time.
-for row in zip(survived):
+for row in zip(output):
     mywriter.writerow(row)
 
 # always make sure that you close the file.
 # otherwise you might find that it is empty.
 csv_out.close()
-
