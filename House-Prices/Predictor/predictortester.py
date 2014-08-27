@@ -252,6 +252,25 @@ results = []
 for row in dataset['Price']:
     results.append(float(row))
 
+zipped = []
+for elem in zip(prices, results):   #for each element in latitude and longitude (dependently) add it to a list
+    zipped.extend(elem)
 
+percentages = []
+for e,f in zip(zipped,zipped[1:])[::2]:
+    percentages.append(abs(((e-f)/e)*100))
+
+count = 0
+for i in percentages:
+    count = count + i
+    error = count/len(percentages)
+print error 
+
+#minimise the above error by playing around with the columns
+    
+    
+    
+    
+    
 
 
