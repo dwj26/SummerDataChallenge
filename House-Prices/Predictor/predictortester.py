@@ -7,6 +7,7 @@ Created on Tue Aug 26 21:36:46 2014
 
 import random
 import pandas as pd
+import numpy as np
 
 
 #These first lines make a file with a number of random lines from the house file, change and see change in accuracy
@@ -43,13 +44,13 @@ prices = []
 for row in df['Price1']:
     prices.append(float(row))
 
-df = df.drop(['Price','Price1'], axis =1)    
+df = df.drop(['Price','Price1'], axis =1)    #drop the price data as this is going to be the test data (price needs to be guessed)
 
 header = ["Trdate", "Postcode", "Property_Type", "Newbuild", "Freeorlease","Year","Month","Oseast1M","Osnrth1M","Oa11","Latitude","Longitude"]
-df.to_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/price.csv', columns = header)
+df.to_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/price.csv', columns = header) #write to file with the columns on the above line
 
 
-#now the general predictor code
+"""now the general predictor code"""
 
 import pandas as pd
 import csv
@@ -136,8 +137,7 @@ sortpostcode(df['Postcode1']) #call the function
 
 
 df = df.drop(['AreaCode','Postcode1','Newbuild','Property_Type','Postcode', 'Trdate','Freeorlease','Price','Price1'], axis = 1)  #delete any of the data in the dataset that is not a number
-
-
+df= df.drop(['AreaCodeNum', 'Hold', 'Date'], axis = 1)
 train_data = df.values
 
 ##REPEAT the process with the test data, this is the data without the price. In this case, just one house where a price is needed.
@@ -200,7 +200,7 @@ def sortpostcode(column):
 sortpostcode('Postcode1') #call the function
 
 de = de.drop(['Postcode1','Newbuild','Property_Type','Postcode', 'Trdate','Freeorlease', 'Unnamed: 0'], axis = 1)  #delete any of the data in the dataset that is not a number
-
+de = de.drop(['AreaCodeNum', 'Hold', 'Date'], axis = 1)
 #create a numpy array
 
 test_data = de.values
@@ -244,33 +244,26 @@ for row in zip(output):
 csv_out.close()
 
 
-#now to find the percentage correct
+"""now to find the percentage correct"""
 
-dataset = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/results.csv', header = 0)
+dataset = pd.read_csv('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/results.csv', header = 0) #read in he results to a pandas dataset
 
-results = []
-for row in dataset['Price']:
-    results.append(float(row))
+results = []  #create an empty results list
+for row in dataset['Price']:  #for each row in the price column
+    results.append(float(row))  #append that row to the resulst list
 
-zipped = []
-for elem in zip(prices, results):   #for each element in latitude and longitude (dependently) add it to a list
+zipped = []  #create an empty zipped list
+for elem in zip(prices, results):   #for each element in prices and results (dependently) add it to a list
     zipped.extend(elem)
 
-percentages = []
-for e,f in zip(zipped,zipped[1:])[::2]:
-    percentages.append(abs(((e-f)/e)*100))
+percentages = []  #create an empty list to store the percentage errors
+for e,f in zip(zipped,zipped[1:])[::2]:  #for each item pairwise in the zipped list (prices then results)
+    percentages.append(abs(((e-f)/e)*100))  #append the percentage error 
 
-count = 0
-for i in percentages:
-    count = count + i
-    error = count/len(percentages)
-print error 
+print np.median(percentages)  #print the median percentage error
 
 #minimise the above error by playing around with the columns
+#without combining column information the lowest I can get it is 26%
     
     
     
-    
-    
-
-
