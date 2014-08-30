@@ -64,7 +64,7 @@ with open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-hous
     lines = lines[1:]
     source.close()
 line1 = ['Price,Trdate,Postcode,Property_Type,Newbuild,Freeorlease,Year,Month,Oseast1M,Osnrth1M,Oa11,Latitude,Longitude\r\n']
-random_choice = line1 + random.sample(lines, 2000)  #3000 seems around the topend I can take with my computer memory, increase higher to check, but may kill python
+random_choice = line1 + random.sample(lines, 3000)  #3000 seems around the topend I can take with my computer memory, increase higher to check, but may kill python
 
 with open('C:/Users/Dan/Desktop/Python Scripts(SPYDER)/Data/london2009-2014-house-prices/Predictor/trainprice.csv', "wb") as sink:
     sink.write("\n".join(random_choice))
@@ -100,10 +100,10 @@ df['Lat'] = df['Latitude']
 df['Lon']=df['Longitude']
 df['Hold'] = df['Freeorlease'].map({'F':0,'L':1}).astype(int) #map Freehold to 0 and Leasehold to 1
 df['Build'] = df['Newbuild'].map({'N':0,'Y':1}).astype(int) #map newbuilt to 1 and old build to 0
-df['PropType']=df['Property_Type'].map({'D':0,'S':1,'T':2,'F':3}).astype(int)  #map detached to 0, semi-detached to 1, terraced to 2, flat or maisonette to 3
+df['PropType']=df['Property_Type'].map({'D':3,'S':2,'T':1,'F':0}).astype(int)  #map detached to 0, semi-detached to 1, terraced to 2, flat or maisonette to 3
 df = df.drop(['Year', 'Month', 'Oseast1M','Osnrth1M','Oa11', 'Longitude', 'Latitude'], axis = 1)  #delete the unused columns (some of these may be useful in future)
 df = df.dropna()  #just in case, drop the NaN's
-
+df['Build+PropType'] = df.Build + df.PropType
 
 def datetodatetime(column):
     date = []
@@ -121,7 +121,7 @@ def sortpostcode(column):
     for i in column:  #for an element in the postocde column
         postcode.append(i[0:2])#append the first two letters of that area
     df['AreaCode']= postcode  #put into new column call area code, area code now means the first two letters of the postcode
-    uniquelist = list(df.apply(set)[15])  #make a list of the unique post code areas (first 2 letters of post code)
+    uniquelist = list(set(postcode))  #make a list of the unique post code areas (first 2 letters of post code)
     areacodenum = []  #create an empty list for the number associated with the area code to placed in (to make it predictor friendly)
     for i in df['AreaCode']:  #for each element in the AreaCode (2 letter) list
         count = 0  #start the count at 0
@@ -160,14 +160,16 @@ def sortdata(column, replace, new,datum):
     
 sortdata(de['Postcode'], ' ', 'Postcode1',de)  #call function, hashtag these out if we only need one part of the code
 sortdata(dg['Postcode'], ' ', 'Postcode1',dg)
+
 #change data to numbers as a predictor will only work with numbers
 de['Lat'] = de['Latitude']
 de['Lon']=de['Longitude']
 de['Hold'] = de['Freeorlease'].map({'F':0,'L':1}).astype(int) #map Freehold to 0 and Leasehold to 1
 de['Build'] = de['Newbuild'].map({'N':0,'Y':1}).astype(int) #map newbuilt to 1 and old build to 0
-de['PropType']=de['Property_Type'].map({'D':0,'S':1,'T':2,'F':3}).astype(int)  #map detached to 0, semi-detached to 1, terraced to 2, flat or maisonette to 3
+de['PropType']=de['Property_Type'].map({'D':3,'S':2,'T':1,'F':0}).astype(int)  #map detached to 0, semi-detached to 1, terraced to 2, flat or maisonette to 3
 de = de.drop(['Year', 'Month', 'Oseast1M','Osnrth1M','Oa11','Latitude','Longitude'], axis = 1)  #delete the unused columns (some of these may be useful in future)
 de = de.dropna()  #just in case, drop the NaN's
+de['Build+PropType'] = de.Build + de.PropType
 
 def datetodatetime(column):
     date = []
@@ -263,7 +265,8 @@ for e,f in zip(zipped,zipped[1:])[::2]:  #for each item pairwise in the zipped l
 print np.median(percentages)  #print the median percentage error
 
 #minimise the above error by playing around with the columns
-#without combining column information the lowest I can get it is 26%
+#without combining column information the lowest I can get it is 24%
+    
     
     
     
